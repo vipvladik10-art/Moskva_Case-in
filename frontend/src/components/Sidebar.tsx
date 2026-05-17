@@ -1,13 +1,26 @@
-import { useDecisions, useMaintenance, useResetDemo, useSites, useSuddenStorm } from '@/api/hooks';
+import { useNavigate } from 'react-router-dom';
+import {
+  useDecisions,
+  useMaintenance,
+  useMlStatus,
+  useResetDemo,
+  useSites,
+  useSuddenStorm,
+  useWeatherSummary,
+} from '@/api/hooks';
 import { DemoControls } from './DemoControls';
 import { DecisionLog } from './DecisionLog';
+import { WeatherSummaryPanel } from './WeatherSummaryPanel';
 
 export function Sidebar() {
-  const { data: sites = [] } = useSites();
+  const { data: sites = [], isLoading: sitesLoading } = useSites();
+  const { data: weatherSummary = [], isLoading: summariesLoading } = useWeatherSummary();
   const { data: decisions = [] } = useDecisions(20);
   const { data: maintenance = [] } = useMaintenance();
+  const { data: mlStatus } = useMlStatus();
   const storm = useSuddenStorm();
   const reset = useResetDemo();
+  const navigate = useNavigate();
 
   const rainSite = sites.find((s) => s.weather_state === 'rain');
 
@@ -28,6 +41,47 @@ export function Sidebar() {
           </p>
         )}
       </div>
+
+      <div className="card">
+        <h3>Погодная сводка</h3>
+        <WeatherSummaryPanel
+          sites={sites}
+          summaries={weatherSummary}
+          isLoading={sitesLoading || summariesLoading}
+          onSelect={(id) => navigate(`/sites/${id}`)}
+        />
+      </div>
+
+      {mlStatus && (
+        <div className="card">
+          <h3>ML-аналитика</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <span className="muted" style={{ fontSize: 12 }}>
+                Калибратор
+              </span>
+              <span className={`badge ${mlStatus.calibrator.loaded ? 'ok' : 'warn'}`}>
+                {mlStatus.calibrator.loaded ? mlStatus.calibrator.model : 'identity'}
+              </span>
+            </div>
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <span className="muted" style={{ fontSize: 12 }}>
+                Зелёное окно
+              </span>
+              <span
+                className={`badge ${mlStatus.green_window_predictor.loaded ? 'ok' : 'info'}`}
+              >
+                {mlStatus.green_window_predictor.method}
+              </span>
+            </div>
+            <p className="muted" style={{ fontSize: 11, margin: 0, lineHeight: 1.4 }}>
+              {mlStatus.calibrator.loaded
+                ? 'Прогноз провайдера калибруется ML-моделью.'
+                : 'Модель не обучена — показываем сырые значения. См. data/models/README.md.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h3>Открытые наряды ТО</h3>

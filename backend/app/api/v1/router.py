@@ -6,6 +6,7 @@ from app.api.v1 import (
     green_window,
     health,
     maintenance,
+    ml,
     plants,
     sites,
     trucks,
@@ -21,4 +22,5 @@ api_router.include_router(forecasts.router, prefix="/sites", tags=["forecast"])
 api_router.include_router(green_window.router, prefix="/sites", tags=["green-window"])
 api_router.include_router(maintenance.router, prefix="/maintenance", tags=["maintenance"])
 api_router.include_router(demo.router, prefix="/demo", tags=["demo"])
+api_router.include_router(ml.router, prefix="/ml", tags=["ml"])
 api_router.include_router(ws.router, tags=["ws"])

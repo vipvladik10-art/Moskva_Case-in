@@ -6,10 +6,16 @@ export interface Plant {
   active: boolean;
 }
 
+export interface SiteGeometry {
+  type: 'LineString';
+  coordinates: [number, number][];
+}
+
 export interface Site {
   id: number;
   name: string;
   location: { lat: number; lon: number };
+  geometry?: SiteGeometry;
   lane_width_m: number;
   layer_thickness_m: number;
   mix_density_t_m3: number;
@@ -37,6 +43,28 @@ export interface HourlyForecast {
   precip_probability: number;
   wind_speed_ms: number;
   confidence: number;
+}
+
+export interface WeatherSummary {
+  site_id: number;
+  source: string;
+  updated_at: string;
+  current: {
+    temp_c: number | null;
+    wind_speed_ms: number;
+    precip_mm_h: number;
+    weather_label: string;
+  };
+  next_6h: {
+    max_precip_probability: number;
+    max_precip_mm_h: number;
+    risk_starts_at: string | null;
+    hourly_precip_mm_h?: number[];
+    hourly_precip_probability?: number[];
+    hourly_temp_c?: number[];
+  };
+  state: 'rain' | 'risk' | 'clear' | 'unknown';
+  demo_forced: boolean;
 }
 
 export interface GreenWindowAlternative {
@@ -94,4 +122,17 @@ export interface SuddenStormResponse {
   redirected_trucks: Truck[];
   maintenance_tasks: MaintenanceTask[];
   explanation: string;
+}
+
+export interface MlStatus {
+  calibrator: {
+    loaded: boolean;
+    model: string;
+    description: string;
+  };
+  green_window_predictor: {
+    loaded: boolean;
+    method: 'ml' | 'heuristic';
+    description: string;
+  };
 }

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.services.demo.state import demo_state
+from app.services.weather.service import get_site_weather_summary
 
 router = APIRouter()
 
@@ -8,6 +9,11 @@ router = APIRouter()
 @router.get("")
 async def list_sites() -> list[dict]:
     return demo_state.sites()
+
+
+@router.get("/weather-summary")
+async def weather_summary() -> list[dict]:
+    return [await get_site_weather_summary(site) for site in demo_state.sites()]
 
 
 @router.get("/{site_id}")

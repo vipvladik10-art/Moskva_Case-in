@@ -18,6 +18,7 @@
 | **Метео-источники** | OpenWeatherMap, Gismeteo, Tomorrow.io, RadarMap (ансамбль из 3+) |
 | **Запуск (MVP)** | `cd backend && uvicorn app.main:app --port 8000` + `cd frontend && npm run dev` |
 | **Запуск (полный)** | `docker compose -f infra/docker-compose.yml up` |
+| **Подробный запуск с нуля** | см. [`LOCAL_SETUP_GUIDE.md`](./LOCAL_SETUP_GUIDE.md) |
 
 ---
 

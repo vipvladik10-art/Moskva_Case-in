@@ -6,10 +6,12 @@ import type {
   HourlyForecast,
   MaintenanceTask,
   MaxTonnageResponse,
+  MlStatus,
   Plant,
   Site,
   SuddenStormResponse,
   Truck,
+  WeatherSummary,
 } from './types';
 
 export function usePlants() {
@@ -33,6 +35,14 @@ export function useSite(siteId: number) {
     queryFn: async () => (await api.get<Site>(`/sites/${siteId}`)).data,
     enabled: !!siteId,
     refetchInterval: 3000,
+  });
+}
+
+export function useWeatherSummary() {
+  return useQuery({
+    queryKey: ['weather-summary'],
+    queryFn: async () => (await api.get<WeatherSummary[]>('/sites/weather-summary')).data,
+    refetchInterval: 5000,
   });
 }
 
@@ -119,5 +129,14 @@ export function useResetDemo() {
     onSuccess: () => {
       qc.invalidateQueries();
     },
+  });
+}
+
+export function useMlStatus() {
+  return useQuery({
+    queryKey: ['ml-status'],
+    queryFn: async () => (await api.get<MlStatus>('/ml/status')).data,
+    staleTime: 60_000,
+    retry: 1,
   });
 }

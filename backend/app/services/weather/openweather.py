@@ -17,7 +17,8 @@ class OpenWeatherProvider(WeatherProvider):
     """
 
     name = "openweather"
-    BASE_URL = "https://api.openweathermap.org/data/2.5/forecast"
+    FORECAST_URL = "https://api.openweathermap.org/data/2.5/forecast"
+    CURRENT_URL = "https://api.openweathermap.org/data/2.5/weather"
 
     def __init__(self, api_key: str | None = None, client: httpx.AsyncClient | None = None) -> None:
         self.api_key = api_key or settings.openweather_api_key
@@ -30,7 +31,7 @@ class OpenWeatherProvider(WeatherProvider):
             "units": "metric",
             "appid": self.api_key,
         }
-        resp = await self.client.get(self.BASE_URL, params=params)
+        resp = await self.client.get(self.FORECAST_URL, params=params)
         resp.raise_for_status()
         data = resp.json()
         issued_at = datetime.now(tz=timezone.utc)
@@ -61,3 +62,29 @@ class OpenWeatherProvider(WeatherProvider):
                     )
                 )
         return out
+
+    async def fetch_current(self, lat: float, lon: float) -> dict:
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "units": "metric",
+            "lang": "ru",
+            "appid": self.api_key,
+        }
+        resp = await self.client.get(self.CURRENT_URL, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        main = data.get("main", {})
+        wind = data.get("wind", {})
+        weather = (data.get("weather") or [{}])[0]
+        precip_1h = data.get("rain", {}).get("1h", 0.0) + data.get("snow", {}).get("1h", 0.0)
+        return {
+            "temp_c": main.get("temp"),
+            "wind_speed_ms": wind.get("speed", 0.0),
+            "precip_mm_h": precip_1h,
+            "weather_label": weather.get("description") or weather.get("main") or "нет данных",
+            "updated_at": datetime.fromtimestamp(data.get("dt"), tz=timezone.utc)
+            if data.get("dt")
+            else datetime.now(tz=timezone.utc),
+            "source": self.name,
+        }
