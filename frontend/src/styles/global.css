@@ -1,0 +1,50 @@
+:root {
+  --c-bg: #0b1220;
+  --c-surface: #131c2e;
+  --c-text: #e8eef9;
+  --c-accent: #4ea1ff;
+  --c-warn: #ffb648;
+  --c-danger: #ff5b6f;
+  --c-ok: #5bd4a4;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--c-surface);
+  border-bottom: 1px solid #1f2a44;
+}
+
+.topbar a {
+  color: var(--c-text);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.topbar a.active { background: var(--c-accent); color: #0b1220; }
+
+main { flex: 1; min-height: 0; }
+
+/* Адаптация под телефон мастера */
+@media (max-width: 720px) {
+  .topbar a { font-size: 1.1rem; padding: 0.5rem 0.75rem; }
+}

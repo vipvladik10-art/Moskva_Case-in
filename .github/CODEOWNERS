@@ -1,0 +1,19 @@
+# Эти правила требуют апрува владельцев модулей при PR.
+# Замените @username на реальные GitHub-хендлы участников.
+
+# Backend
+/backend/                          @p1-handle
+/backend/app/services/weather/     @e2-handle
+/backend/app/services/algorithms/  @p1-handle @e1-handle
+
+# Frontend
+/frontend/                         @p2-handle
+
+# Документация
+/docs/tech_process.md              @e1-handle
+/docs/data_sources.md              @e2-handle
+/docs/architecture.md              @p1-handle @e3-handle
+
+# Инфраструктура
+/infra/                            @e3-handle
+/.github/                          @e3-handle

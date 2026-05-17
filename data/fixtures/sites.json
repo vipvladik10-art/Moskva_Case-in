@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "name": "М-11, км 60–62",
+    "location": { "lat": 55.95, "lon": 37.30 },
+    "lane_width_m": 4.0,
+    "layer_thickness_m": 0.05,
+    "mix_density_t_m3": 2.40,
+    "mix_type": "ЩМА-15",
+    "thin_layer": false,
+    "preferred_plant_id": 1
+  },
+  {
+    "id": 2,
+    "name": "М-11, км 78–80",
+    "location": { "lat": 56.30, "lon": 37.10 },
+    "lane_width_m": 3.75,
+    "layer_thickness_m": 0.04,
+    "mix_density_t_m3": 2.42,
+    "mix_type": "ЩМА-10",
+    "thin_layer": true,
+    "preferred_plant_id": 2
+  },
+  {
+    "id": 3,
+    "name": "М-11, км 95–96",
+    "location": { "lat": 56.42, "lon": 36.85 },
+    "lane_width_m": 4.0,
+    "layer_thickness_m": 0.05,
+    "mix_density_t_m3": 2.40,
+    "mix_type": "Тип Б",
+    "thin_layer": false,
+    "preferred_plant_id": 3
+  },
+  {
+    "id": 4,
+    "name": "М-11, км 110",
+    "location": { "lat": 56.55, "lon": 36.60 },
+    "lane_width_m": 4.0,
+    "layer_thickness_m": 0.06,
+    "mix_density_t_m3": 2.38,
+    "mix_type": "Тип Б",
+    "thin_layer": false,
+    "preferred_plant_id": 3
+  },
+  {
+    "id": 5,
+    "name": "М-11, км 125",
+    "location": { "lat": 56.70, "lon": 36.40 },
+    "lane_width_m": 4.0,
+    "layer_thickness_m": 0.05,
+    "mix_density_t_m3": 2.40,
+    "mix_type": "ЩМА-15",
+    "thin_layer": false,
+    "preferred_plant_id": 3
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "АБЗ-1 Химки",
+    "location": { "lat": 55.91, "lon": 37.40 },
+    "capacity_t_per_hour": 60,
+    "active": true
+  },
+  {
+    "id": 2,
+    "name": "АБЗ-2 Солнечногорск",
+    "location": { "lat": 56.18, "lon": 36.99 },
+    "capacity_t_per_hour": 80,
+    "active": true
+  },
+  {
+    "id": 3,
+    "name": "АБЗ-3 Клин",
+    "location": { "lat": 56.33, "lon": 36.73 },
+    "capacity_t_per_hour": 50,
+    "active": true
+  }
+]

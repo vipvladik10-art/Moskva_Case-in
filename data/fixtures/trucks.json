@@ -1,0 +1,8 @@
+[
+  { "id": 101, "plate": "А101АА77", "status": "idle", "home_plant_id": 1, "load_t": 0 },
+  { "id": 102, "plate": "А102АА77", "status": "idle", "home_plant_id": 1, "load_t": 0 },
+  { "id": 201, "plate": "В201ВВ50", "status": "idle", "home_plant_id": 2, "load_t": 0 },
+  { "id": 202, "plate": "В202ВВ50", "status": "idle", "home_plant_id": 2, "load_t": 0 },
+  { "id": 301, "plate": "С301СС50", "status": "idle", "home_plant_id": 3, "load_t": 0 },
+  { "id": 302, "plate": "С302СС50", "status": "idle", "home_plant_id": 3, "load_t": 0 }
+]

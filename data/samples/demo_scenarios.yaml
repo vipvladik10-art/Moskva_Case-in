@@ -1,0 +1,28 @@
+# Демо-сценарии для презентации (использует MockWeatherProvider).
+# Ответственный: E3 (DevOps/QA) совместно с E2.
+
+scenarios:
+  clear_day:
+    description: "Ясно весь день, идеальные условия"
+    hours: [{ temp_c: 18, precip_mm_h: 0, precip_probability: 0.05, wind_speed_ms: 2 }]
+    repeat: 24
+
+  rain_at_noon:
+    description: "Дождь в 12:00–14:00, после прояснение"
+    hours:
+      - { temp_c: 14, precip_mm_h: 0, precip_probability: 0.10, wind_speed_ms: 3, repeat: 5 }
+      - { temp_c: 12, precip_mm_h: 2.5, precip_probability: 0.90, wind_speed_ms: 4, repeat: 2 }
+      - { temp_c: 13, precip_mm_h: 0, precip_probability: 0.20, wind_speed_ms: 3, repeat: 17 }
+
+  frost_morning:
+    description: "Заморозки утром → запуск supply (антифриз)"
+    hours:
+      - { temp_c: -2, precip_mm_h: 0, precip_probability: 0.05, wind_speed_ms: 5, repeat: 4 }
+      - { temp_c: 8, precip_mm_h: 0, precip_probability: 0.05, wind_speed_ms: 3, repeat: 20 }
+
+  sudden_storm:
+    description: "Внезапная гроза через 1 час — главный сценарий демо"
+    hours:
+      - { temp_c: 16, precip_mm_h: 0, precip_probability: 0.10, wind_speed_ms: 2, repeat: 1 }
+      - { temp_c: 12, precip_mm_h: 4.0, precip_probability: 0.95, wind_speed_ms: 8, repeat: 3 }
+      - { temp_c: 14, precip_mm_h: 0, precip_probability: 0.20, wind_speed_ms: 3, repeat: 20 }
