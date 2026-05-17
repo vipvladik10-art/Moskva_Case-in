@@ -60,6 +60,25 @@ function probabilityPct(summary: WeatherSummary): number {
   return Math.max(0, Math.min(100, Math.round(summary.next_6h.max_precip_probability * 100)));
 }
 
+function precipScore(summary: WeatherSummary): number {
+  const pop = summary.next_6h.max_precip_probability;
+  const maxMm = Math.min(summary.next_6h.max_precip_mm_h / 0.8, 1.5);
+  const currentMm = Math.min(summary.current.precip_mm_h / 0.3, 1.5);
+  return pop * 0.45 + maxMm * 0.4 + currentMm * 0.15;
+}
+
+function localPrecipColor(localPct: number): string {
+  if (localPct >= 80) return '#ff335f';
+  if (localPct >= 60) return '#ff8a2b';
+  if (localPct >= 35) return '#ffd23f';
+  return '#34d399';
+}
+
+function localPrecipLineWidth(localPct: number, summary: WeatherSummary): number {
+  const rainBoost = summary.current.precip_mm_h > 0.1 ? 2 : 0;
+  return 5 + Math.round(localPct / 18) + rainBoost;
+}
+
 function cloudPct(summary: WeatherSummary): number {
   if (typeof summary.current.clouds_pct === 'number') {
     return Math.max(0, Math.min(100, Math.round(summary.current.clouds_pct)));
@@ -127,8 +146,50 @@ export function MapPage() {
   const weatherSource =
     weatherSummary[0]?.source === 'openweather' ? 'OpenWeatherMap' : 'mock fallback';
 
+  const summaryBySiteId = useMemo(
+    () => new globalThis.Map(weatherSummary.map((summary) => [summary.site_id, summary])),
+    [weatherSummary],
+  );
+
+  const localPrecipBySiteId = useMemo(() => {
+    const scored = sites
+      .map((site) => {
+        const summary = summaryBySiteId.get(site.id);
+        return summary ? { siteId: site.id, summary, score: precipScore(summary) } : null;
+      })
+      .filter((item): item is { siteId: number; summary: WeatherSummary; score: number } =>
+        Boolean(item),
+      );
+    const scores = scored.map((item) => item.score);
+    const min = Math.min(...scores);
+    const max = Math.max(...scores);
+    const spread = max - min;
+    return new globalThis.Map(
+      scored.map((item) => {
+        const localPct =
+          spread > 0.001
+            ? Math.round(((item.score - min) / spread) * 100)
+            : probabilityPct(item.summary);
+        return [
+          item.siteId,
+          {
+            score: item.score,
+            localPct,
+            color: localPrecipColor(localPct),
+            lineWidth: localPrecipLineWidth(localPct, item.summary),
+          },
+        ];
+      }),
+    );
+  }, [sites, summaryBySiteId]);
+
   const selectedSite: Site | undefined = sites.find((s) => s.id === selectedWeatherSiteId);
-  const selectedSummary = weatherSummary.find((w) => w.site_id === selectedWeatherSiteId);
+  const selectedSummary = selectedWeatherSiteId
+    ? summaryBySiteId.get(selectedWeatherSiteId)
+    : undefined;
+  const selectedLocalPrecip = selectedWeatherSiteId
+    ? localPrecipBySiteId.get(selectedWeatherSiteId)
+    : undefined;
 
   const sitesGeoJson = useMemo(
     () => ({
@@ -136,21 +197,25 @@ export function MapPage() {
       features: sites
         .filter((s): s is Site & { geometry: NonNullable<Site['geometry']> } => Boolean(s.geometry))
         .map((s) => {
-          const summary = weatherSummary.find((w) => w.site_id === s.id);
+          const summary = summaryBySiteId.get(s.id);
+          const localPrecip = localPrecipBySiteId.get(s.id);
           const state = siteState(s, summary);
+          const isLocalPrecip = weatherLayer === 'precipitation' && localPrecip;
           return {
             type: 'Feature' as const,
             properties: {
               id: s.id,
               name: s.name,
               state,
-              color: stateColor(state),
+              color: isLocalPrecip ? localPrecip.color : stateColor(state),
+              lineWidth: isLocalPrecip ? localPrecip.lineWidth : 6,
+              localPrecipPct: localPrecip?.localPct ?? null,
             },
             geometry: s.geometry,
           };
         }),
     }),
-    [sites, weatherSummary],
+    [sites, summaryBySiteId, localPrecipBySiteId, weatherLayer],
   );
 
   const weatherTileUrl =
@@ -242,7 +307,7 @@ export function MapPage() {
               type="line"
               paint={{
                 'line-color': ['get', 'color'],
-                'line-width': 6,
+                'line-width': ['get', 'lineWidth'],
                 'line-opacity': 0.95,
               }}
               layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -252,10 +317,14 @@ export function MapPage() {
 
         {showWeatherBadges &&
           sites.map((s) => {
-            const summary = weatherSummary.find((w) => w.site_id === s.id);
+            const summary = summaryBySiteId.get(s.id);
+            const localPrecip = localPrecipBySiteId.get(s.id);
+            const isLocalPrecip = weatherLayer === 'precipitation' && summary && localPrecip;
             const state = siteState(s, summary);
             const title = summary
-              ? `${s.name}: ${summary.current.temp_c?.toFixed(1) ?? '—'} °C, осадки ${summary.current.precip_mm_h.toFixed(1)} мм/ч, PoP 6 ч ${probabilityPct(summary)}%`
+              ? `${s.name}: осадки ${summary.current.precip_mm_h.toFixed(1)} мм/ч, максимум ${summary.next_6h.max_precip_mm_h.toFixed(1)} мм/ч, PoP 6 ч ${probabilityPct(summary)}%${
+                  localPrecip ? `, локальный риск ${localPrecip.localPct}%` : ''
+                }`
               : `${s.name}: прогноз загружается`;
             return (
               <Marker
@@ -265,15 +334,27 @@ export function MapPage() {
                 anchor="left"
               >
                 <button
-                  className={`weather-badge ${state}`}
+                  className={`weather-badge ${state} ${isLocalPrecip ? 'local-precip' : ''}`}
                   title={title}
+                  style={
+                    isLocalPrecip
+                      ? {
+                          background: `linear-gradient(135deg, ${localPrecip.color}, ${localPrecip.color}cc)`,
+                          borderColor: 'rgba(255, 255, 255, 0.95)',
+                        }
+                      : undefined
+                  }
                   onClick={(event) => {
                     event.stopPropagation();
                     setSelectedWeatherSiteId(s.id);
                   }}
                 >
                   <WeatherIcon state={state} size={14} />
-                  <span>{stateLabel(summary)}</span>
+                  <span>
+                    {isLocalPrecip
+                      ? `PoP ${probabilityPct(summary)}% · лок ${localPrecip.localPct}%`
+                      : stateLabel(summary)}
+                  </span>
                 </button>
               </Marker>
             );
@@ -293,8 +374,9 @@ export function MapPage() {
         ))}
 
         {sites.map((s) => {
-          const summary = weatherSummary.find((w) => w.site_id === s.id);
+          const summary = summaryBySiteId.get(s.id);
           const state = siteState(s, summary);
+          const localPrecip = localPrecipBySiteId.get(s.id);
           return (
             <Marker
               key={`s-${s.id}`}
@@ -306,7 +388,12 @@ export function MapPage() {
               <div
                 className={`marker site ${state}`}
                 title={`${s.name}${state === 'rain' ? ' (идёт дождь)' : ''}`}
-                style={{ background: stateColor(state) }}
+                style={{
+                  background:
+                    weatherLayer === 'precipitation' && localPrecip
+                      ? localPrecip.color
+                      : stateColor(state),
+                }}
               >
                 {s.id}
               </div>
@@ -378,6 +465,12 @@ export function MapPage() {
                   {selectedSummary.next_6h.max_precip_mm_h.toFixed(1)} мм/ч, старт{' '}
                   {formatRiskTime(selectedSummary.next_6h.risk_starts_at)}
                 </dd>
+                {selectedLocalPrecip && (
+                  <>
+                    <dt>Локально по М-11</dt>
+                    <dd>индекс риска {selectedLocalPrecip.localPct}%</dd>
+                  </>
+                )}
                 <dt>Источник</dt>
                 <dd>
                   {selectedSummary.source === 'openweather' ? 'OpenWeatherMap' : selectedSummary.source} ·{' '}
