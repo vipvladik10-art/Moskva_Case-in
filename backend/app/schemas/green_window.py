@@ -26,6 +26,10 @@ class GreenWindowResponse(BaseModel):
     plant_id: int | None
     delivery_time_min: int | None
     confidence: float
+    baseline_duration_min: int | None = None
+    ml_predicted_duration_min: int | None = None
+    ml_method: str | None = None
+    ml_confidence: float | None = None
     alternatives: list[GreenWindowAlternative] = []
 
 

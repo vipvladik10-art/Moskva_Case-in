@@ -28,6 +28,10 @@ export function Sidebar() {
     <>
       <div className="card">
         <h3>Демо-сценарий</h3>
+        <p className="muted" style={{ margin: '0 0 8px', fontSize: 11, lineHeight: 1.4 }}>
+          Ручной триггер нужен только для показа внезапного события; погодные ТО-наряды создаются
+          автоматически по прогнозному риску.
+        </p>
         <DemoControls
           sites={sites}
           rainSiteId={rainSite?.id ?? null}
@@ -87,7 +91,8 @@ export function Sidebar() {
         <h3>Открытые наряды ТО</h3>
         {maintenance.length === 0 ? (
           <p className="muted" style={{ margin: 0, fontSize: 12 }}>
-            Пока нет нарядов. Запустите дождь для генерации.
+            Пока нет открытых нарядов. Система создаст их автоматически при погодном риске, либо
+            можно запустить демо-сценарий.
           </p>
         ) : (
           <div className="site-list">

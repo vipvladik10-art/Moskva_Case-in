@@ -18,8 +18,19 @@ from pathlib import Path
 from threading import RLock
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-FIXTURES_DIR = REPO_ROOT / "data" / "fixtures"
+
+def _fixtures_dir() -> Path:
+    backend_root = Path(__file__).resolve().parents[3]
+    repo_fixtures = backend_root.parent / "data" / "fixtures"
+    if repo_fixtures.exists():
+        return repo_fixtures
+    mounted_fixtures = Path("/repo-data/fixtures")
+    if mounted_fixtures.exists():
+        return mounted_fixtures
+    return backend_root / "data" / "fixtures"
+
+
+FIXTURES_DIR = _fixtures_dir()
 
 
 def _load_json(name: str) -> list[dict[str, Any]]:

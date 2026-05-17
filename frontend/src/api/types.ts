@@ -81,6 +81,10 @@ export interface GreenWindowResponse {
   plant_id: number | null;
   delivery_time_min: number | null;
   confidence: number;
+  baseline_duration_min?: number | null;
+  ml_predicted_duration_min?: number | null;
+  ml_method?: 'ml' | 'heuristic' | null;
+  ml_confidence?: number | null;
   alternatives: GreenWindowAlternative[];
 }
 

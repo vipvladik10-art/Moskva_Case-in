@@ -67,10 +67,24 @@ export function SiteDetailsPage() {
               «Зелёное окно»: {new Date(gw.window.start).toLocaleString()} —{' '}
               {new Date(gw.window.end).toLocaleString()}. Доставка с АБЗ #{gw.plant_id}:{' '}
               {gw.delivery_time_min} мин. Уверенность: {Math.round(gw.confidence * 100)}%.
+              {gw.ml_predicted_duration_min != null && (
+                <>
+                  {' '}
+                  ML-оценка: {gw.ml_predicted_duration_min} мин ({gw.ml_method},{' '}
+                  {Math.round((gw.ml_confidence ?? 0) * 100)}%).
+                </>
+              )}
             </p>
           ) : (
             <p className="muted" style={{ fontSize: 12, margin: '8px 0 0' }}>
               На ближайшие 24 часа нет интервала без осадков нужной длительности.
+              {gw?.ml_predicted_duration_min != null && (
+                <>
+                  {' '}
+                  ML-оценка: {gw.ml_predicted_duration_min} мин ({gw.ml_method},{' '}
+                  {Math.round((gw.ml_confidence ?? 0) * 100)}%).
+                </>
+              )}
             </p>
           )}
         </div>

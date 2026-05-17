@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     green_window_min_temp_c: float = 5.0
     green_window_min_temp_thin_layer_c: float = 10.0
 
+    ml_models_dir: str = ""
+
     order_lead_time_hours: float = 4.0
 
 

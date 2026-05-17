@@ -49,6 +49,11 @@ def demo_scenario_for_site(site_id: int) -> list[dict]:
     return out
 
 
+async def _mock_forecast(site_id: int, lat: float, lon: float, hours: int) -> list[HourlyForecast]:
+    forecast = await MockWeatherProvider(scenario=demo_scenario_for_site(site_id)).fetch(lat, lon, hours)
+    return get_calibrator().apply(forecast)
+
+
 async def get_site_forecast(site_id: int, lat: float, lon: float, hours: int = 24) -> list[HourlyForecast]:
     """Вернуть прогноз для участка.
 
@@ -57,7 +62,7 @@ async def get_site_forecast(site_id: int, lat: float, lon: float, hours: int = 2
     откатываемся на mock при пустом ключе, ошибке сети или лимите API.
     """
     if demo_state.rain_site_id() == site_id:
-        return await MockWeatherProvider(scenario=demo_scenario_for_site(site_id)).fetch(lat, lon, hours)
+        return await _mock_forecast(site_id, lat, lon, hours)
 
     if settings.openweather_api_key:
         try:
@@ -70,7 +75,7 @@ async def get_site_forecast(site_id: int, lat: float, lon: float, hours: int = 2
             # MVP должен показываться стабильно даже при лимитах API или без сети.
             pass
 
-    return await MockWeatherProvider(scenario=demo_scenario_for_site(site_id)).fetch(lat, lon, hours)
+    return await _mock_forecast(site_id, lat, lon, hours)
 
 
 async def get_site_weather_summary(site: dict) -> dict:

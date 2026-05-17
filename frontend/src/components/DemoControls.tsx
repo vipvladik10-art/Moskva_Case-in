@@ -15,7 +15,7 @@ export function DemoControls({ sites, rainSiteId, onTriggerStorm, onReset, isLoa
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <label className="muted" style={{ fontSize: 12 }}>
-        Запустить дождь на участке:
+        Имитировать дождь на участке:
       </label>
       <select
         value={siteId}
@@ -41,7 +41,7 @@ export function DemoControls({ sites, rainSiteId, onTriggerStorm, onReset, isLoa
           style={{ flex: 1 }}
           title="Имитировать внезапные осадки и реакцию системы"
         >
-          {isLoading ? 'Запуск…' : 'Запустить дождь'}
+          {isLoading ? 'Запуск…' : 'Демо: внезапный дождь'}
         </button>
         <button className="ghost" onClick={onReset} disabled={isLoading} title="Сбросить состояние">
           Сброс

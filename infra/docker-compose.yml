@@ -30,15 +30,17 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-asphalt}:${POSTGRES_PASSWORD:-asphalt}@db:5432/${POSTGRES_DB:-asphalt}
       REDIS_URL: redis://redis:6379/0
+      ML_MODELS_DIR: /repo-data/models
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ../backend:/app
+      - ../data:/repo-data
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
@@ -46,7 +48,7 @@ services:
       context: ..
       dockerfile: infra/Dockerfile.frontend
     environment:
-      VITE_API_BASE_URL: http://localhost:8000/api/v1
+      VITE_API_BASE_URL: http://localhost:8001/api/v1
     ports:
       - "5173:5173"
     volumes:

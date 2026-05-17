@@ -14,12 +14,26 @@
 Если файла нет, бэкенд продолжает работать в **identity / heuristic** режиме —
 без изменения поведения относительно сырого прогноза провайдера.
 
-## Обучение
+## Демо-обучение
 
-Скрипт `scripts/train_calibrator.py` (TODO E2) читает таблицу
-`forecast_hourly` (TimescaleDB) и таблицу фактической погоды,
-обучает `IsotonicRegression` / `GradientBoostingRegressor`
-и сохраняет артефакт сюда.
+Для локального демо без накопленной БД выполните из корня репозитория:
+
+```powershell
+python scripts/train_ml_demo.py
+```
+
+Скрипт сохранит лёгкие демо-модели с `predict()`-контрактом и создаст:
+
+- `data/models/calibrator.joblib`
+- `data/models/green_window_predictor.joblib`
+
+Если бэкенд уже запущен, после генерации вызовите `POST /api/v1/ml/reload`.
+
+## Реальное обучение
+
+Следующий шаг для продакшн-датасета — скрипт, который читает таблицу
+`forecast_hourly` (TimescaleDB) и таблицу фактической погоды, обучает
+`IsotonicRegression` / `GradientBoostingRegressor` и сохраняет артефакты сюда.
 
 После обучения вызовите `POST /api/v1/ml/reload` — бэкенд подхватит новый
 артефакт без рестарта.

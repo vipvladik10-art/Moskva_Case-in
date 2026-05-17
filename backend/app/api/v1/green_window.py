@@ -11,6 +11,7 @@ from app.schemas.green_window import (
 from app.services.algorithms import compute_green_window, compute_max_tonnage
 from app.services.algorithms.geo import delivery_time_minutes, haversine_km
 from app.services.demo.state import demo_state
+from app.services.ml.green_window_predictor import get_predictor
 from app.services.weather.service import get_site_forecast
 
 router = APIRouter()
@@ -55,6 +56,8 @@ async def green_window(site_id: int, body: GreenWindowRequest) -> GreenWindowRes
         min_temp_c=min_temp,
         min_duration_min=body.min_duration_min,
     )
+    baseline_duration_min = window.duration_min if window else 0
+    ml_prediction = get_predictor().predict(forecast, baseline_duration_min)
 
     alternatives = []
     for p in demo_state.plants():
@@ -79,6 +82,10 @@ async def green_window(site_id: int, body: GreenWindowRequest) -> GreenWindowRes
         plant_id=plant_id,
         delivery_time_min=delivery_min,
         confidence=window.confidence if window else 0.0,
+        baseline_duration_min=ml_prediction.baseline_min,
+        ml_predicted_duration_min=ml_prediction.predicted_min,
+        ml_method=ml_prediction.method,
+        ml_confidence=ml_prediction.confidence,
         alternatives=alternatives,
     )
 

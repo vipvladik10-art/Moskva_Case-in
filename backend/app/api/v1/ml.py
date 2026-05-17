@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.services.demo.state import demo_state
 from app.services.ml.calibrator import get_calibrator, reset_calibrator
-from app.services.ml.green_window_predictor import get_predictor
+from app.services.ml.green_window_predictor import get_predictor, reset_predictor
 from app.services.weather.service import get_site_forecast
 
 router = APIRouter()
@@ -38,11 +38,15 @@ async def ml_reload() -> dict:
     Полезно после переобучения моделей оффлайн-скриптом — без перезапуска API.
     """
     reset_calibrator()
+    reset_predictor()
     cal = get_calibrator()
+    pred = get_predictor()
     return {
         "reloaded": True,
         "calibrator_loaded": cal.is_loaded,
-        "model": cal.model_name,
+        "calibrator_model": cal.model_name,
+        "green_window_predictor_loaded": pred.is_loaded,
+        "green_window_predictor_method": "ml" if pred.is_loaded else "heuristic",
     }
 
 

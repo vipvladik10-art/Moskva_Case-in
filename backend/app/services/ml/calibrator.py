@@ -23,12 +23,11 @@ from pathlib import Path
 from typing import Any
 
 from app.schemas.weather import HourlyForecast
+from app.services.ml.paths import models_dir
 
 logger = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-MODELS_DIR = REPO_ROOT / "data" / "models"
-CALIBRATOR_PATH = MODELS_DIR / "calibrator.joblib"
+CALIBRATOR_PATH = models_dir() / "calibrator.joblib"
 
 
 @dataclass

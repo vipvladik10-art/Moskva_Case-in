@@ -30,11 +30,11 @@ from pathlib import Path
 from typing import Any
 
 from app.schemas.weather import HourlyForecast
+from app.services.ml.paths import models_dir
 
 logger = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-MODEL_PATH = REPO_ROOT / "data" / "models" / "green_window_predictor.joblib"
+MODEL_PATH = models_dir() / "green_window_predictor.joblib"
 
 
 @dataclass
@@ -141,3 +141,9 @@ def get_predictor() -> GreenWindowPredictor:
     if _predictor is None:
         _predictor = GreenWindowPredictor.from_artifact()
     return _predictor
+
+
+def reset_predictor() -> None:
+    """Сбросить кэш предиктора после обновления артефакта."""
+    global _predictor
+    _predictor = None
