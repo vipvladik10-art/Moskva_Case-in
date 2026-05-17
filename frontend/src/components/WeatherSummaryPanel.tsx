@@ -14,7 +14,7 @@ function statusText(summary?: WeatherSummary): string {
   if (summary.demo_forced) return 'демо-дождь';
   if (summary.state === 'rain') return `${summary.current.precip_mm_h.toFixed(1)} мм/ч`;
   if (summary.state === 'risk') {
-    return `риск ${Math.round(summary.next_6h.max_precip_probability * 100)}%`;
+    return `PoP ${probabilityPct(summary)}%`;
   }
   if (summary.state === 'clear') return 'сухо';
   return 'нет данных';
@@ -31,6 +31,10 @@ function sparklineColor(summary?: WeatherSummary): { line: string; fill: string 
   if (summary?.state === 'rain') return { line: '#ff5b6f', fill: 'rgba(255,91,111,0.18)' };
   if (summary?.state === 'risk') return { line: '#4ea1ff', fill: 'rgba(78,161,255,0.18)' };
   return { line: '#5bd4a4', fill: 'rgba(91,212,164,0.18)' };
+}
+
+function probabilityPct(summary: WeatherSummary): number {
+  return Math.max(0, Math.min(100, Math.round(summary.next_6h.max_precip_probability * 100)));
 }
 
 export function WeatherSummaryPanel({ sites, summaries, isLoading, onSelect }: Props) {
@@ -57,12 +61,8 @@ export function WeatherSummaryPanel({ sites, summaries, isLoading, onSelect }: P
         const probs = summary?.next_6h.hourly_precip_probability ?? [];
         const series = hourly.length ? hourly : probs;
         const colors = sparklineColor(summary);
-        const riskPct = summary
-          ? Math.max(
-              Math.round((summary.current.precip_mm_h > 0 ? 1 : 0) * 100),
-              Math.round(summary.next_6h.max_precip_probability * 100),
-            )
-          : 0;
+        const riskPct = summary ? probabilityPct(summary) : 0;
+        const currentRain = (summary?.current.precip_mm_h ?? 0) > 0.1;
         return (
           <button
             key={site.id}
@@ -99,8 +99,13 @@ export function WeatherSummaryPanel({ sites, summaries, isLoading, onSelect }: P
                 </div>
               )}
               {summary && (
-                <div className="risk-bar" title={`Риск осадков: ${riskPct}%`}>
+                <div className="risk-bar" title={`Вероятность осадков на 6 часов: ${riskPct}%`}>
                   <div className="risk-bar__fill" style={{ width: `${riskPct}%` }} />
+                </div>
+              )}
+              {summary && currentRain && !summary.demo_forced && (
+                <div className="meta danger-text" style={{ marginTop: 4 }}>
+                  Сейчас осадки {summary.current.precip_mm_h.toFixed(1)} мм/ч
                 </div>
               )}
               {summary?.demo_forced && (

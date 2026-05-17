@@ -7,6 +7,16 @@ from app.schemas.weather import HourlyForecast
 from app.services.weather.base import WeatherProvider
 
 
+def normalize_probability(value: float | int | None) -> float:
+    """OpenWeather `pop` is 0..1, but guard against percent-shaped payloads."""
+    if value is None:
+        return 0.0
+    probability = float(value)
+    if probability > 1:
+        probability /= 100
+    return max(0.0, min(1.0, probability))
+
+
 class OpenWeatherProvider(WeatherProvider):
     """Адаптер OpenWeatherMap 5 day / 3 hour forecast API.
 
@@ -55,7 +65,7 @@ class OpenWeatherProvider(WeatherProvider):
                         temp_c=main.get("temp", 0.0),
                         feels_like_c=main.get("feels_like"),
                         precip_mm_h=precip_mm_h,
-                        precip_probability=h.get("pop", 0.0),
+                        precip_probability=normalize_probability(h.get("pop", 0.0)),
                         wind_speed_ms=wind.get("speed", 0.0),
                         wind_gust_ms=wind.get("gust"),
                         humidity=main.get("humidity", 0) / 100 if main.get("humidity") else None,
@@ -76,11 +86,14 @@ class OpenWeatherProvider(WeatherProvider):
         data = resp.json()
         main = data.get("main", {})
         wind = data.get("wind", {})
+        clouds = data.get("clouds", {})
         weather = (data.get("weather") or [{}])[0]
         precip_1h = data.get("rain", {}).get("1h", 0.0) + data.get("snow", {}).get("1h", 0.0)
         return {
             "temp_c": main.get("temp"),
             "wind_speed_ms": wind.get("speed", 0.0),
+            "wind_deg": wind.get("deg"),
+            "clouds_pct": clouds.get("all"),
             "precip_mm_h": precip_1h,
             "weather_label": weather.get("description") or weather.get("main") or "нет данных",
             "updated_at": datetime.fromtimestamp(data.get("dt"), tz=timezone.utc)

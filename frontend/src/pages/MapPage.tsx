@@ -10,6 +10,7 @@ import { WeatherIcon } from '@/components/WeatherIcon';
 const TILE_URL =
   import.meta.env.VITE_MAP_TILE_URL ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OWM_KEY = import.meta.env.VITE_OWM_API_KEY ?? '';
+const OWM_TILE_PROXY = '/api/v1/map-tiles';
 
 const WEATHER_TILE_URLS: Record<Exclude<WeatherLayer, 'none'>, string> = {
   precipitation: OWM_KEY
@@ -17,13 +18,13 @@ const WEATHER_TILE_URLS: Record<Exclude<WeatherLayer, 'none'>, string> = {
     : 'https://tilecache.rainviewer.com/v2/radar/nowcast_0/256/{z}/{x}/{y}/2/1_1.png',
   clouds: OWM_KEY
     ? `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`
-    : '',
+    : `${OWM_TILE_PROXY}/clouds_new/{z}/{x}/{y}.png`,
   temperature: OWM_KEY
     ? `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`
-    : '',
+    : `${OWM_TILE_PROXY}/temp_new/{z}/{x}/{y}.png`,
   wind: OWM_KEY
     ? `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${OWM_KEY}`
-    : '',
+    : `${OWM_TILE_PROXY}/wind_new/{z}/{x}/{y}.png`,
 };
 
 const LAYER_LABELS: Record<WeatherLayer, string> = {
@@ -50,9 +51,54 @@ function stateLabel(summary?: WeatherSummary): string {
   if (!summary) return 'нет данных';
   if (summary.demo_forced) return 'демо-дождь';
   if (summary.state === 'rain') return `${summary.current.precip_mm_h.toFixed(1)} мм/ч`;
-  if (summary.state === 'risk') return `${Math.round(summary.next_6h.max_precip_probability * 100)}%`;
+  if (summary.state === 'risk') return `PoP ${probabilityPct(summary)}%`;
   if (summary.state === 'clear') return 'сухо';
   return 'нет данных';
+}
+
+function probabilityPct(summary: WeatherSummary): number {
+  return Math.max(0, Math.min(100, Math.round(summary.next_6h.max_precip_probability * 100)));
+}
+
+function cloudPct(summary: WeatherSummary): number {
+  if (typeof summary.current.clouds_pct === 'number') {
+    return Math.max(0, Math.min(100, Math.round(summary.current.clouds_pct)));
+  }
+  const label = summary.current.weather_label.toLowerCase();
+  if (label.includes('пасмур') || label.includes('overcast')) return 95;
+  if (label.includes('облач') || label.includes('cloud')) return 70;
+  if (label.includes('ясно') || label.includes('clear')) return 10;
+  return summary.state === 'rain' ? 90 : 35;
+}
+
+function windArrow(deg?: number | null): string {
+  if (typeof deg !== 'number') return '•';
+  const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+  return arrows[Math.round((((deg % 360) + 360) % 360) / 45) % arrows.length];
+}
+
+function layerMetricLabel(layer: WeatherLayer, summary: WeatherSummary): string {
+  if (layer === 'clouds') return `Обл. ${cloudPct(summary)}%`;
+  if (layer === 'temperature') {
+    return `${summary.current.temp_c?.toFixed(1) ?? '—'} °C`;
+  }
+  if (layer === 'wind') {
+    return `${windArrow(summary.current.wind_deg)} ${summary.current.wind_speed_ms.toFixed(1)} м/с`;
+  }
+  return stateLabel(summary);
+}
+
+function layerMetricTitle(layer: WeatherLayer, site: Site, summary: WeatherSummary): string {
+  if (layer === 'clouds') {
+    return `${site.name}: облачность ${cloudPct(summary)}%, ${summary.current.weather_label}`;
+  }
+  if (layer === 'temperature') {
+    return `${site.name}: температура ${summary.current.temp_c?.toFixed(1) ?? '—'} °C`;
+  }
+  if (layer === 'wind') {
+    return `${site.name}: ветер ${summary.current.wind_speed_ms.toFixed(1)} м/с`;
+  }
+  return `${site.name}: ${stateLabel(summary)}`;
 }
 
 function formatRiskTime(value: string | null): string {
@@ -130,7 +176,7 @@ export function MapPage() {
   return (
     <div className="map-wrap">
       <Map
-        initialViewState={{ longitude: 35.72, latitude: 56.93, zoom: 9.7 }}
+        initialViewState={{ longitude: 35.65, latitude: 56.945, zoom: 9.35 }}
         mapStyle={mapStyle}
       >
         <NavigationControl position="top-right" />
@@ -143,7 +189,7 @@ export function MapPage() {
             tiles={[weatherTileUrl]}
             tileSize={256}
             attribution={
-              OWM_KEY ? '© OpenWeatherMap' : '© RainViewer'
+              weatherLayer === 'precipitation' && !OWM_KEY ? '© RainViewer' : '© OpenWeatherMap'
             }
           >
             <Layer
@@ -153,6 +199,31 @@ export function MapPage() {
             />
           </Source>
         )}
+
+        {!['none', 'precipitation'].includes(weatherLayer) &&
+          sites.map((s) => {
+            const summary = weatherSummary.find((w) => w.site_id === s.id);
+            if (!summary) return null;
+            return (
+              <Marker
+                key={`metric-${weatherLayer}-${s.id}`}
+                latitude={s.location.lat}
+                longitude={s.location.lon}
+                anchor="center"
+              >
+                <button
+                  className={`weather-metric-marker ${weatherLayer}`}
+                  title={layerMetricTitle(weatherLayer, s, summary)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedWeatherSiteId(s.id);
+                  }}
+                >
+                  {layerMetricLabel(weatherLayer, summary)}
+                </button>
+              </Marker>
+            );
+          })}
 
         {showSiteLines && sitesGeoJson.features.length > 0 && (
           <Source id="m11-sites" type="geojson" data={sitesGeoJson}>
@@ -184,7 +255,7 @@ export function MapPage() {
             const summary = weatherSummary.find((w) => w.site_id === s.id);
             const state = siteState(s, summary);
             const title = summary
-              ? `${s.name}: ${summary.current.temp_c?.toFixed(1) ?? '—'} °C, осадки ${summary.current.precip_mm_h.toFixed(1)} мм/ч, риск ${Math.round(summary.next_6h.max_precip_probability * 100)}%`
+              ? `${s.name}: ${summary.current.temp_c?.toFixed(1) ?? '—'} °C, осадки ${summary.current.precip_mm_h.toFixed(1)} мм/ч, PoP 6 ч ${probabilityPct(summary)}%`
               : `${s.name}: прогноз загружается`;
             return (
               <Marker
@@ -295,10 +366,15 @@ export function MapPage() {
                   осадки {selectedSummary.current.precip_mm_h.toFixed(1)} мм/ч
                 </dd>
                 <dt>Ветер</dt>
-                <dd>{selectedSummary.current.wind_speed_ms.toFixed(1)} м/с</dd>
+                <dd>
+                  {windArrow(selectedSummary.current.wind_deg)}{' '}
+                  {selectedSummary.current.wind_speed_ms.toFixed(1)} м/с
+                </dd>
+                <dt>Облачность</dt>
+                <dd>{cloudPct(selectedSummary)}%</dd>
                 <dt>Ближайшие 6 ч</dt>
                 <dd>
-                  риск {Math.round(selectedSummary.next_6h.max_precip_probability * 100)}%, максимум{' '}
+                  PoP {probabilityPct(selectedSummary)}%, максимум{' '}
                   {selectedSummary.next_6h.max_precip_mm_h.toFixed(1)} мм/ч, старт{' '}
                   {formatRiskTime(selectedSummary.next_6h.risk_starts_at)}
                 </dd>
@@ -329,19 +405,12 @@ export function MapPage() {
           <div className="map-overlay__group-title">Слой погоды</div>
           <div className="layer-switcher">
             {(Object.keys(LAYER_LABELS) as WeatherLayer[]).map((key) => {
-              const disabled =
-                key !== 'none' && key !== 'precipitation' && !OWM_KEY;
               return (
                 <button
                   key={key}
                   className={`chip ${weatherLayer === key ? 'active' : ''}`}
                   onClick={() => setWeatherLayer(key)}
-                  disabled={disabled}
-                  title={
-                    disabled
-                      ? 'Доступно при VITE_OWM_API_KEY'
-                      : `Показать слой: ${LAYER_LABELS[key]}`
-                  }
+                  title={`Показать слой: ${LAYER_LABELS[key]}`}
                 >
                   {LAYER_LABELS[key]}
                 </button>
@@ -366,7 +435,14 @@ export function MapPage() {
           {!OWM_KEY && weatherLayer === 'precipitation' && (
             <div className="muted" style={{ fontSize: 10, lineHeight: 1.3 }}>
               Источник: RainViewer (бесплатно). Для OWM-слоёв задайте{' '}
-              <code>VITE_OWM_API_KEY</code>.
+              <code>OPENWEATHER_API_KEY</code> на backend.
+            </div>
+          )}
+          {!['none', 'precipitation'].includes(weatherLayer) && (
+            <div className="muted" style={{ fontSize: 10, lineHeight: 1.3 }}>
+              Слой {LAYER_LABELS[weatherLayer]}: OpenWeatherMap
+              {OWM_KEY ? ' напрямую.' : ' через backend-прокси.'} Если он пустой,
+              проверьте ключ OWM.
             </div>
           )}
         </div>

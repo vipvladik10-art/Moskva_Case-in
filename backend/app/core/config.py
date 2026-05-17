@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     app_env: str = "dev"
     app_port: int = 8000
     app_log_level: str = "INFO"
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    cors_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"]
+    )
 
     database_url: str = "postgresql+asyncpg://asphalt:asphalt@db:5432/asphalt"
     redis_url: str = "redis://redis:6379/0"

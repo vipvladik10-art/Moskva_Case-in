@@ -457,6 +457,32 @@ main {
   background: rgba(151, 163, 191, 0.9);
 }
 
+.weather-metric-marker {
+  min-width: 72px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(11, 18, 32, 0.26);
+  color: #08111f;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.weather-metric-marker.clouds {
+  background: linear-gradient(135deg, rgba(235, 242, 255, 0.96), rgba(119, 147, 185, 0.88));
+}
+
+.weather-metric-marker.temperature {
+  background: linear-gradient(135deg, rgba(255, 220, 124, 0.96), rgba(255, 91, 111, 0.86));
+}
+
+.weather-metric-marker.wind {
+  background: linear-gradient(135deg, rgba(153, 225, 255, 0.96), rgba(78, 161, 255, 0.88));
+}
+
 .weather-popup {
   color: #142033;
   min-width: 260px;

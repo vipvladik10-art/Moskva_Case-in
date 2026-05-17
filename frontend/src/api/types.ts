@@ -52,6 +52,8 @@ export interface WeatherSummary {
   current: {
     temp_c: number | null;
     wind_speed_ms: number;
+    wind_deg?: number | null;
+    clouds_pct?: number | null;
     precip_mm_h: number;
     weather_label: string;
   };

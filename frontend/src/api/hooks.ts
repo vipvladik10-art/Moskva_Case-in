@@ -14,10 +14,14 @@ import type {
   WeatherSummary,
 } from './types';
 
+const activeTabInterval = (ms: number) => () =>
+  typeof document === 'undefined' || document.visibilityState === 'visible' ? ms : false;
+
 export function usePlants() {
   return useQuery({
     queryKey: ['plants'],
     queryFn: async () => (await api.get<Plant[]>('/plants')).data,
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -25,7 +29,8 @@ export function useSites() {
   return useQuery({
     queryKey: ['sites'],
     queryFn: async () => (await api.get<Site[]>('/sites')).data,
-    refetchInterval: 3000,
+    refetchInterval: activeTabInterval(10_000),
+    staleTime: 10_000,
   });
 }
 
@@ -34,7 +39,8 @@ export function useSite(siteId: number) {
     queryKey: ['site', siteId],
     queryFn: async () => (await api.get<Site>(`/sites/${siteId}`)).data,
     enabled: !!siteId,
-    refetchInterval: 3000,
+    refetchInterval: activeTabInterval(10_000),
+    staleTime: 10_000,
   });
 }
 
@@ -42,7 +48,8 @@ export function useWeatherSummary() {
   return useQuery({
     queryKey: ['weather-summary'],
     queryFn: async () => (await api.get<WeatherSummary[]>('/sites/weather-summary')).data,
-    refetchInterval: 5000,
+    refetchInterval: activeTabInterval(30_000),
+    staleTime: 30_000,
   });
 }
 
@@ -50,7 +57,8 @@ export function useTrucks() {
   return useQuery({
     queryKey: ['trucks'],
     queryFn: async () => (await api.get<Truck[]>('/trucks')).data,
-    refetchInterval: 3000,
+    refetchInterval: activeTabInterval(10_000),
+    staleTime: 10_000,
   });
 }
 
@@ -60,7 +68,8 @@ export function useForecast(siteId: number, hours = 24) {
     queryFn: async () =>
       (await api.get<HourlyForecast[]>(`/sites/${siteId}/forecast`, { params: { hours } })).data,
     enabled: !!siteId,
-    refetchInterval: 5000,
+    refetchInterval: activeTabInterval(30_000),
+    staleTime: 30_000,
   });
 }
 
@@ -75,7 +84,8 @@ export function useGreenWindow(siteId: number) {
         })
       ).data,
     enabled: !!siteId,
-    refetchInterval: 5000,
+    refetchInterval: activeTabInterval(30_000),
+    staleTime: 30_000,
   });
 }
 
@@ -85,7 +95,8 @@ export function useMaxTonnage(siteId: number) {
     queryFn: async () =>
       (await api.post<MaxTonnageResponse>(`/sites/${siteId}/max-tonnage`, {})).data,
     enabled: !!siteId,
-    refetchInterval: 5000,
+    refetchInterval: activeTabInterval(30_000),
+    staleTime: 30_000,
   });
 }
 
@@ -94,7 +105,8 @@ export function useMaintenance() {
     queryKey: ['maintenance'],
     queryFn: async () =>
       (await api.get<MaintenanceTask[]>('/maintenance/tasks', { params: { status: 'open' } })).data,
-    refetchInterval: 3000,
+    refetchInterval: activeTabInterval(15_000),
+    staleTime: 15_000,
   });
 }
 
@@ -103,7 +115,8 @@ export function useDecisions(limit = 50) {
     queryKey: ['decisions', limit],
     queryFn: async () =>
       (await api.get<DecisionEntry[]>('/demo/decisions', { params: { limit } })).data,
-    refetchInterval: 2000,
+    refetchInterval: activeTabInterval(7_500),
+    staleTime: 7_500,
   });
 }
 

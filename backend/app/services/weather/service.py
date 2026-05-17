@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 
 from app.core.config import settings
@@ -78,13 +79,19 @@ async def get_site_weather_summary(site: dict) -> dict:
     lon = site["location"]["lon"]
     demo_forced = demo_state.rain_site_id() == site_id
 
-    forecast = await get_site_forecast(site_id=site_id, lat=lat, lon=lon, hours=6)
-    source = forecast[0].source if forecast else "unknown"
+    forecast_task = asyncio.create_task(get_site_forecast(site_id=site_id, lat=lat, lon=lon, hours=6))
+    current_task = (
+        asyncio.create_task(OpenWeatherProvider().fetch_current(lat, lon))
+        if settings.openweather_api_key and not demo_forced
+        else None
+    )
 
+    forecast = await forecast_task
+    source = forecast[0].source if forecast else "unknown"
     current = None
-    if settings.openweather_api_key and not demo_forced:
+    if current_task is not None:
         try:
-            current = await OpenWeatherProvider().fetch_current(lat, lon)
+            current = await current_task
             source = current.get("source", source)
         except Exception:
             current = None
@@ -94,6 +101,8 @@ async def get_site_weather_summary(site: dict) -> dict:
         current = {
             "temp_c": float(first.temp_c) if first else None,
             "wind_speed_ms": float(first.wind_speed_ms) if first else 0.0,
+            "wind_deg": None,
+            "clouds_pct": 90 if demo_forced else 25,
             "precip_mm_h": float(first.precip_mm_h) if first else 0.0,
             "weather_label": "демо-дождь" if demo_forced else "mock-прогноз",
             "updated_at": datetime.now(tz=timezone.utc),
@@ -131,6 +140,8 @@ async def get_site_weather_summary(site: dict) -> dict:
         "current": {
             "temp_c": current.get("temp_c"),
             "wind_speed_ms": current.get("wind_speed_ms", 0.0),
+            "wind_deg": current.get("wind_deg"),
+            "clouds_pct": current.get("clouds_pct"),
             "precip_mm_h": current_precip,
             "weather_label": current.get("weather_label", "нет данных"),
         },

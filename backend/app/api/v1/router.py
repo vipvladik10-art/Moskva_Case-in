@@ -5,6 +5,7 @@ from app.api.v1 import (
     forecasts,
     green_window,
     health,
+    map_tiles,
     maintenance,
     ml,
     plants,
@@ -15,6 +16,7 @@ from app.api.v1 import (
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])
+api_router.include_router(map_tiles.router, tags=["map-tiles"])
 api_router.include_router(plants.router, prefix="/plants", tags=["plants"])
 api_router.include_router(sites.router, prefix="/sites", tags=["sites"])
 api_router.include_router(trucks.router, prefix="/trucks", tags=["trucks"])

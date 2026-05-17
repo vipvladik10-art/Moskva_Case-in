@@ -1,10 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
-import { MapPage } from './pages/MapPage';
 import { SitesPage } from './pages/SitesPage';
 import { SiteDetailsPage } from './pages/SiteDetailsPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { Sidebar } from './components/Sidebar';
 import { useSites } from './api/hooks';
+
+const MapPage = lazy(() => import('./pages/MapPage').then((module) => ({ default: module.MapPage })));
 
 export default function App() {
   const { data: sites = [] } = useSites();
@@ -35,12 +37,14 @@ export default function App() {
       </header>
       <main>
         <section className="workspace">
-          <Routes>
-            <Route path="/" element={<MapPage />} />
-            <Route path="/sites" element={<SitesPage />} />
-            <Route path="/sites/:id" element={<SiteDetailsPage />} />
-            <Route path="/maintenance" element={<MaintenancePage />} />
-          </Routes>
+          <Suspense fallback={<div className="card">Загружаем карту…</div>}>
+            <Routes>
+              <Route path="/" element={<MapPage />} />
+              <Route path="/sites" element={<SitesPage />} />
+              <Route path="/sites/:id" element={<SiteDetailsPage />} />
+              <Route path="/maintenance" element={<MaintenancePage />} />
+            </Routes>
+          </Suspense>
         </section>
         <aside className="sidebar">
           <Sidebar />
