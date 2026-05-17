@@ -5,30 +5,32 @@ interface Props {
   window: { start: string; end: string; duration_min: number } | null;
 }
 
+function classify(h: HourlyForecast): 'rain' | 'cold' | 'ok' {
+  if (h.precip_mm_h > 0 || h.precip_probability > 0.3) return 'rain';
+  if (h.temp_c < 5) return 'cold';
+  return 'ok';
+}
+
 export function GreenWindowTimeline({ forecast, window }: Props) {
-  if (!forecast.length) return <p>Нет данных прогноза.</p>;
+  if (!forecast.length) return <p className="muted">Нет данных прогноза.</p>;
+  const start = window ? new Date(window.start).getTime() : null;
+  const end = window ? new Date(window.end).getTime() : null;
   return (
-    <div>
-      <p>
-        Окно:{' '}
-        {window
-          ? `${new Date(window.start).toLocaleString()} — ${new Date(window.end).toLocaleString()} (${window.duration_min} мин)`
-          : 'не найдено'}
-      </p>
-      <div style={{ display: 'flex', gap: 2 }}>
-        {forecast.map((h) => {
-          const isRain = h.precip_mm_h > 0 || h.precip_probability > 0.3;
-          const isCold = h.temp_c < 5;
-          const color = isRain ? 'var(--c-danger)' : isCold ? 'var(--c-warn)' : 'var(--c-ok)';
-          return (
-            <div
-              key={h.valid_at}
-              title={`${new Date(h.valid_at).toLocaleString()} | ${h.temp_c}°C | ${h.precip_mm_h} мм/ч`}
-              style={{ width: 18, height: 32, background: color, borderRadius: 2 }}
-            />
-          );
-        })}
-      </div>
+    <div className="timeline">
+      {forecast.slice(0, 24).map((h) => {
+        const ts = new Date(h.valid_at).getTime();
+        const inWindow = start !== null && end !== null && ts >= start && ts < end;
+        const cls = classify(h);
+        return (
+          <div
+            key={h.valid_at}
+            className={`hour ${cls} ${inWindow ? 'window' : ''}`}
+            title={`${new Date(h.valid_at).toLocaleString()}\n${h.temp_c.toFixed(1)} °C · ${h.precip_mm_h.toFixed(1)} мм/ч · p=${Math.round(h.precip_probability * 100)}%`}
+          >
+            {new Date(h.valid_at).getHours()}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -1,20 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
+from app.services.demo.state import demo_state
 
 router = APIRouter()
 
 
 @router.get("")
 async def list_plants() -> list[dict]:
-    """TODO(P1, S1): SELECT * FROM plants."""
-    return []
-
-
-@router.post("", status_code=201)
-async def create_plant(payload: dict) -> dict:
-    """TODO(P1, S1): INSERT plant с geometry from lat/lon."""
-    return {"id": 0, **payload}
+    return demo_state.plants()
 
 
 @router.get("/{plant_id}")
 async def get_plant(plant_id: int) -> dict:
-    raise NotImplementedError
+    plant = demo_state.plant(plant_id)
+    if not plant:
+        raise HTTPException(status_code=404, detail="Plant not found")
+    return plant

@@ -13,9 +13,11 @@
 |---|---|
 | **Команда** | 2 программиста + 3 инженера (см. [TEAM.md](./TEAM.md)) |
 | **Срок** | 8 недель / 4 спринта по 2 недели (см. [ROADMAP.md](./ROADMAP.md)) |
+| **Демо-MVP** | работает на in-memory fixtures без БД — см. [MVP_DEMO.md](./MVP_DEMO.md) |
 | **Стек** | Python 3.11 / FastAPI · React 18 + Vite · PostgreSQL + PostGIS + TimescaleDB · MapLibre GL · Docker Compose |
 | **Метео-источники** | OpenWeatherMap, Gismeteo, Tomorrow.io, RadarMap (ансамбль из 3+) |
-| **Запуск** | `docker compose -f infra/docker-compose.yml up` |
+| **Запуск (MVP)** | `cd backend && uvicorn app.main:app --port 8000` + `cd frontend && npm run dev` |
+| **Запуск (полный)** | `docker compose -f infra/docker-compose.yml up` |
 
 ---
 

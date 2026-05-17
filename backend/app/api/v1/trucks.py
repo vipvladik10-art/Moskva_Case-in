@@ -1,20 +1,18 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
+from app.services.demo.state import demo_state
 
 router = APIRouter()
 
 
 @router.get("")
 async def list_trucks() -> list[dict]:
-    """TODO(P1, S3)."""
-    return []
+    return demo_state.trucks()
 
 
-@router.post("/{truck_id}/redirect")
-async def redirect_truck(truck_id: int, payload: dict) -> dict:
-    """TODO(P1, S3): принудительное перенаправление, см. services/logistics/dispatcher.py."""
-    raise NotImplementedError
-
-
-@router.get("/{truck_id}/history")
-async def truck_history(truck_id: int) -> list[dict]:
-    return []
+@router.get("/{truck_id}")
+async def get_truck(truck_id: int) -> dict:
+    for t in demo_state.trucks():
+        if t["id"] == truck_id:
+            return t
+    raise HTTPException(status_code=404, detail="Truck not found")

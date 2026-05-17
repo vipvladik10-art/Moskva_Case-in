@@ -29,9 +29,10 @@ def cooling_time_to_min(
     table = _load_table()
     rows = table["rows"]
     targets = table["targets"]
-    if str(int(target_temp_c)) not in targets:
+    target_int = int(target_temp_c)
+    if target_int not in targets:
         raise ValueError(f"Целевая температура {target_temp_c} не в таблице.")
-    col = targets.index(int(target_temp_c))
+    col = targets.index(target_int)
 
     starts = sorted(rows.keys(), reverse=True)
     if start_temp_c >= starts[0]:

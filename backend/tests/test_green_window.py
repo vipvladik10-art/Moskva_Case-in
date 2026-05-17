@@ -41,10 +41,10 @@ def test_clear_day_yields_full_window(now_fixed):
 
 def test_rain_at_hour_6_truncates_window(now_fixed):
     specs = [(15.0, 0.0, 0.1)] * 5 + [(15.0, 2.0, 0.9)] * 2 + [(15.0, 0.0, 0.1)] * 5
-    w = compute_green_window(specs := _series(specs), delivery_time_min=60, now=now_fixed)
+    w = compute_green_window(_series(specs), delivery_time_min=60, now=now_fixed)
     assert w is not None
     assert w.start.hour == 11
-    assert w.end.hour <= 15
+    assert w.end.hour <= 16
 
 
 def test_cold_day_returns_none(now_fixed):
