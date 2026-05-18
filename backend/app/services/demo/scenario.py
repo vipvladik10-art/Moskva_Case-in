@@ -15,7 +15,10 @@ from __future__ import annotations
 from typing import Any
 
 from app.services.algorithms.geo import haversine_km
+from app.services.decisions.rules import emit_decision
 from app.services.demo.state import demo_state
+from app.services.maintenance.planner import maintenance_planner
+from app.services.maintenance.post_precip import schedule_post_rain_tasks
 
 
 def _nearest_dry_site(rain_site_id: int) -> dict[str, Any] | None:
@@ -28,9 +31,6 @@ def _nearest_dry_site(rain_site_id: int) -> dict[str, Any] | None:
     ]
     if not candidates:
         return None
-    # Для показательного дорожного сценария сначала пробуем перебросить смесь
-    # вперёд по трассе, а не назад. Если впереди сухих участков нет — берём
-    # ближайший в любом направлении.
     forward = [s for s in candidates if s["id"] > rain_site_id]
     if forward:
         return min(forward, key=lambda s: s["id"])
@@ -51,7 +51,8 @@ def _trucks_for_site(site_id: int, target_count: int = 3) -> list[dict[str, Any]
     site = demo_state.site(site_id)
     plant_id = site["preferred_plant_id"] if site else None
     idle = [
-        t for t in trucks
+        t
+        for t in trucks
         if t["id"] not in {x["id"] for x in en_route}
         and (plant_id is None or t.get("home_plant_id") == plant_id)
         and t["status"] in ("idle", "loading")
@@ -66,7 +67,7 @@ def run_sudden_storm(rain_site_id: int = 2, redirect_count: int = 3) -> dict[str
         raise ValueError(f"Site {rain_site_id} not found")
 
     demo_state.set_rain_site(rain_site_id)
-    demo_state.log("weather", f"Закрыто зелёное окно на участке «{rain_site['name']}»", site_id=rain_site_id)
+    emit_decision("weather.rain_started", site_name=rain_site["name"], site_id=rain_site_id)
 
     target = _nearest_dry_site(rain_site_id)
     redirected: list[dict[str, Any]] = []
@@ -81,29 +82,18 @@ def run_sudden_storm(rain_site_id: int = 2, redirect_count: int = 3) -> dict[str
             if not updated:
                 continue
             redirected.append(updated)
-            demo_state.log(
-                "redirect",
-                f"Самосвал {updated['plate']} перенаправлен на «{target['name']}»",
+            emit_decision(
+                "logistics.truck_redirected",
+                plate=updated["plate"],
+                from_site_name=rain_site["name"],
+                to_site_name=target["name"],
                 truck_id=updated["id"],
                 from_site_id=rain_site_id,
                 to_site_id=target["id"],
             )
 
-    maintenance_tasks: list[dict[str, Any]] = []
-    idle_trucks = [t for t in demo_state.trucks() if t["status"] == "idle"][:2]
-    for t in idle_trucks:
-        task = demo_state.add_maintenance(
-            machine_id=t["id"],
-            reason="weather_idle: непогода — окно для ТО",
-            assigned_to="Бригада №2 (Петров А.Н.)",
-        )
-        maintenance_tasks.append(task)
-        demo_state.log(
-            "maintenance",
-            f"Создан наряд ТО для машины {t['plate']}",
-            task_id=task["id"],
-            machine_id=t["id"],
-        )
+    idle_ids = [t["id"] for t in demo_state.trucks() if t["status"] == "idle"][:2]
+    maintenance_tasks = maintenance_planner.handle_demo_storm(rain_site_id, truck_ids=idle_ids)
 
     if target:
         explanation = (
@@ -125,6 +115,30 @@ def run_sudden_storm(rain_site_id: int = 2, redirect_count: int = 3) -> dict[str
         "redirected_trucks": redirected,
         "maintenance_tasks": maintenance_tasks,
         "explanation": explanation,
+    }
+
+
+def end_rain() -> dict[str, Any]:
+    """Снять демо-дождь и создать наряды на работы после осадков."""
+    site_id = demo_state.clear_rain_site()
+    if site_id is None:
+        site_id = demo_state.last_rain_site_id()
+    if site_id is None:
+        return {
+            "status": "noop",
+            "message": "Активный дождь не зафиксирован",
+            "post_rain_tasks": [],
+        }
+
+    site = demo_state.site(site_id)
+    post_tasks = schedule_post_rain_tasks(site_id)
+    site_name = site["name"] if site else f"№{site_id}"
+    return {
+        "status": "ok",
+        "site_id": site_id,
+        "site_name": site_name,
+        "message": f"Дождь на «{site_name}» снят, создано {len(post_tasks)} наряда(ов) после осадков",
+        "post_rain_tasks": post_tasks,
     }
 
 

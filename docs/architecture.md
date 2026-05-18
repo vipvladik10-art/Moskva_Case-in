@@ -118,6 +118,6 @@ backend/app/
 
 ## 6. Решения, оставленные на «потом»
 
-- Аутентификация: на хакатон — простой Bearer-токен из `.env`. Прод — Keycloak.
+- Аутентификация: MVP — Bearer-токены `ADMIN_API_TOKEN` / `VIEWER_API_TOKEN` (`app/core/security.py`). Прод — Keycloak OIDC через `validate_keycloak_jwt()` (заглушка, спринт 3+).
 - Multi-tenant (несколько подрядчиков): не входит в MVP.
 - Реальный GPS-канал самосвалов: на демо — симулятор.

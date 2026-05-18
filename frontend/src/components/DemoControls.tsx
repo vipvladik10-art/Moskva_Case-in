@@ -5,11 +5,21 @@ interface Props {
   sites: Site[];
   rainSiteId: number | null;
   onTriggerStorm: (siteId: number) => void;
+  onEndRain: () => void;
   onReset: () => void;
   isLoading: boolean;
+  canReset?: boolean;
 }
 
-export function DemoControls({ sites, rainSiteId, onTriggerStorm, onReset, isLoading }: Props) {
+export function DemoControls({
+  sites,
+  rainSiteId,
+  onTriggerStorm,
+  onEndRain,
+  onReset,
+  isLoading,
+  canReset = false,
+}: Props) {
   const [siteId, setSiteId] = useState<number>(sites[1]?.id ?? sites[0]?.id ?? 2);
 
   return (
@@ -34,16 +44,31 @@ export function DemoControls({ sites, rainSiteId, onTriggerStorm, onReset, isLoa
           </option>
         ))}
       </select>
-      <div className="row" style={{ gap: 8 }}>
+      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <button
           onClick={() => onTriggerStorm(siteId)}
           disabled={isLoading}
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 140 }}
           title="Имитировать внезапные осадки и реакцию системы"
         >
           {isLoading ? 'Запуск…' : 'Демо: внезапный дождь'}
         </button>
-        <button className="ghost" onClick={onReset} disabled={isLoading} title="Сбросить состояние">
+        {rainSiteId && (
+          <button
+            className="ghost"
+            onClick={onEndRain}
+            disabled={isLoading}
+            title="Снять дождь и создать наряды после осадков"
+          >
+            Дождь закончился
+          </button>
+        )}
+        <button
+          className="ghost"
+          onClick={onReset}
+          disabled={isLoading || !canReset}
+          title={canReset ? 'Сбросить состояние' : 'Только для администратора'}
+        >
           Сброс
         </button>
       </div>

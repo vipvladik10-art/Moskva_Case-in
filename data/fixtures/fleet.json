@@ -1,0 +1,16 @@
+{
+  "vehicles": [
+    { "id": 1, "category": "paver", "name": "Асфальтоукладчик Vogele Super 1900-3", "plate": "УК-01", "notes": "Основной укладчик" },
+    { "id": 2, "category": "roller", "name": "Каток Hamm HD 90", "plate": "КТ-11", "notes": "Финишное уплотнение" },
+    { "id": 3, "category": "roller", "name": "Каток Dynapac CC 2200", "plate": "КТ-12", "notes": "Предварительное уплотнение" },
+    { "id": 4, "category": "truck", "name": "Самосвал КАМАЗ", "plate": "А101АА77", "notes": "Доставка смеси" },
+    { "id": 5, "category": "support", "name": "Трактор с щёткой", "plate": "ЩТ-01", "notes": "Очистка полотна после дождя" }
+  ],
+  "workers": [
+    { "grade": 6, "role": "мастер участка", "count": 1, "notes": "Общее руководство бригадой" },
+    { "grade": 5, "role": "машинист укладчика", "count": 2, "notes": "" },
+    { "grade": 5, "role": "машинист катка", "count": 3, "notes": "" },
+    { "grade": 4, "role": "дорожный рабочий", "count": 6, "notes": "Ручные операции, разметка, подготовка" },
+    { "grade": 3, "role": "механик", "count": 2, "notes": "ТО и мелкий ремонт на линии" }
+  ]
+}

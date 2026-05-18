@@ -1,0 +1,44 @@
+[
+  {
+    "id": "rain_closes_window",
+    "trigger": "weather.rain_started",
+    "kind": "weather",
+    "message_template": "Закрыто зелёное окно на участке «{site_name}»",
+    "enabled": true
+  },
+  {
+    "id": "truck_redirect",
+    "trigger": "logistics.truck_redirected",
+    "kind": "redirect",
+    "message_template": "Самосвал {plate} перенаправлен с участка «{from_site_name}» на «{to_site_name}»",
+    "enabled": true
+  },
+  {
+    "id": "maintenance_weather_idle",
+    "trigger": "maintenance.weather_idle_created",
+    "kind": "maintenance",
+    "message_template": "Создан наряд ТО ({phase_label}) для {plate} на «{site_name}»",
+    "enabled": true
+  },
+  {
+    "id": "maintenance_post_rain",
+    "trigger": "maintenance.post_rain_created",
+    "kind": "maintenance",
+    "message_template": "После дождя: наряд на «{site_name}» — {what}",
+    "enabled": true
+  },
+  {
+    "id": "weather_risk_forecast",
+    "trigger": "weather.forecast_risk",
+    "kind": "weather",
+    "message_template": "Прогнозный риск осадков на «{site_name}»: POP={pop_pct}%, {precip_mm} мм/ч",
+    "enabled": true
+  },
+  {
+    "id": "rain_ended_followup",
+    "trigger": "weather.rain_ended",
+    "kind": "weather",
+    "message_template": "Осадки на «{site_name}» прекратились — запланированы работы после дождя",
+    "enabled": true
+  }
+]

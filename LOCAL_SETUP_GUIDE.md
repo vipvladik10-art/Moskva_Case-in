@@ -238,8 +238,12 @@ http://localhost:5173
 Frontend отправляет API-запросы на backend по адресу из `.env`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api/v1
+VITE_API_BASE_URL=http://localhost:8001/api/v1
+VITE_API_PROXY_TARGET=http://localhost:8001
 ```
+
+При `npm run dev` относительные запросы `/api/...` проксируются на `VITE_API_PROXY_TARGET`
+(по умолчанию `http://localhost:8001`, если backend в Docker на порту 8001).
 
 ---
 

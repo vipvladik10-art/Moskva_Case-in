@@ -160,4 +160,5 @@ async def get_site_weather_summary(site: dict) -> dict:
         },
         "state": state,
         "demo_forced": demo_forced,
+        "data_mode": "demo" if demo_forced else ("live" if source not in ("mock", "mock fallback", "unknown") else "mock"),
     }

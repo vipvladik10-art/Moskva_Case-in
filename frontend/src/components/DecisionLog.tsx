@@ -23,7 +23,14 @@ export function DecisionLog({ decisions }: Props) {
         <div key={`${d.at}-${i}`} className={`entry ${d.kind}`}>
           <span className="dot" />
           <span className="time">{formatTime(d.at)}</span>
-          <span>{d.message}</span>
+          <span>
+            {d.message}
+            {d.rule_id && (
+              <span className="muted" style={{ marginLeft: 6, fontSize: 10 }}>
+                [{d.rule_id}]
+              </span>
+            )}
+          </span>
         </div>
       ))}
     </div>

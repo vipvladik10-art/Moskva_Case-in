@@ -6,12 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.services.maintenance.scheduler import start_forecast_scheduler, stop_forecast_scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
+    start_forecast_scheduler()
     yield
+    stop_forecast_scheduler()
 
 
 def create_app() -> FastAPI:

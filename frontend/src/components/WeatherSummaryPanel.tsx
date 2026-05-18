@@ -1,4 +1,5 @@
 import type { Site, WeatherSummary } from '@/api/types';
+import { formatWeatherSourceLabel } from '@/lib/weatherSource';
 import { Sparkline } from './Sparkline';
 import { WeatherIcon } from './WeatherIcon';
 
@@ -106,6 +107,11 @@ export function WeatherSummaryPanel({ sites, summaries, isLoading, onSelect }: P
               {summary && currentRain && !summary.demo_forced && (
                 <div className="meta danger-text" style={{ marginTop: 4 }}>
                   Сейчас осадки {summary.current.precip_mm_h.toFixed(1)} мм/ч
+                </div>
+              )}
+              {summary && (
+                <div className="meta" style={{ marginTop: 4, fontSize: 11 }}>
+                  Источник: {formatWeatherSourceLabel(summary)}
                 </div>
               )}
               {summary?.demo_forced && (

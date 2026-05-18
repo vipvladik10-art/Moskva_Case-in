@@ -33,6 +33,13 @@ class Settings(BaseSettings):
 
     order_lead_time_hours: float = 4.0
 
+    auth_enabled: bool = True
+    admin_api_token: str = "dev-admin-token"
+    viewer_api_token: str = "dev-viewer-token"
+
+    auto_maintenance_from_forecast: bool = True
+    maintenance_forecast_interval_sec: int = 300
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -1,6 +1,9 @@
-from fastapi import APIRouter, Query
+from typing import Annotated
 
-from app.services.demo.scenario import reset_demo, run_sudden_storm
+from fastapi import APIRouter, Depends, Query
+
+from app.core.security import CurrentUser, require_admin
+from app.services.demo.scenario import end_rain, reset_demo, run_sudden_storm
 from app.services.demo.state import demo_state
 
 router = APIRouter()
@@ -15,14 +18,25 @@ async def trigger_sudden_storm(
     return run_sudden_storm(rain_site_id=site_id, redirect_count=redirect_count)
 
 
+@router.post("/end-rain")
+async def trigger_end_rain() -> dict:
+    """Снять демо-дождь и создать наряды на работы после осадков."""
+    return end_rain()
+
+
 @router.post("/reset")
-async def reset() -> dict:
+async def reset(_admin: Annotated[CurrentUser, Depends(require_admin)]) -> dict:
     return reset_demo()
 
 
 @router.get("/decisions")
-async def decisions(limit: int = Query(default=50, ge=1, le=500)) -> list[dict]:
+async def decisions(
+    limit: int = Query(default=50, ge=1, le=500),
+    task_id: int | None = Query(default=None),
+) -> list[dict]:
     items = demo_state.decisions()
+    if task_id is not None:
+        items = [d for d in items if d.get("task_id") == task_id]
     return items[-limit:][::-1]
 
 

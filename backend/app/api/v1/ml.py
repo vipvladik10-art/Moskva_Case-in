@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from app.core.security import CurrentUser, require_admin
 
 from app.services.demo.state import demo_state
 from app.services.ml.calibrator import get_calibrator, reset_calibrator
@@ -32,7 +36,7 @@ async def ml_status() -> dict:
 
 
 @router.post("/reload")
-async def ml_reload() -> dict:
+async def ml_reload(_admin: Annotated[CurrentUser, Depends(require_admin)]) -> dict:
     """Сбросить кэш моделей и перезагрузить артефакты с диска.
 
     Полезно после переобучения моделей оффлайн-скриптом — без перезапуска API.

@@ -45,9 +45,12 @@ export interface HourlyForecast {
   confidence: number;
 }
 
+export type WeatherDataMode = 'live' | 'demo' | 'mock';
+
 export interface WeatherSummary {
   site_id: number;
   source: string;
+  data_mode?: WeatherDataMode;
   updated_at: string;
   current: {
     temp_c: number | null;
@@ -99,19 +102,92 @@ export interface MaxTonnageResponse {
   explanation: string;
 }
 
+export type MaintenancePhase = 'during_rain' | 'after_rain';
+
+export type MaintenanceTriggerSource = 'forecast_risk' | 'demo_storm' | 'rain_ended';
+
 export interface MaintenanceTask {
   id: number;
-  machine_id: number;
+  machine_id: number | null;
+  site_id: number | null;
+  destination: string;
+  what: string;
+  why: string;
+  crew_instructions: string;
+  equipment: string[];
+  phase: MaintenancePhase;
   reason: string;
+  reason_code: string;
+  trigger_source: MaintenanceTriggerSource | string;
+  dedup_key: string;
   status: string;
   assigned_to: string;
+  priority: string;
   created_at: string;
+  updated_at?: string;
+  decision_ids: number[];
+  rule_id?: string | null;
+  created_by: string;
+}
+
+export interface FleetVehicle {
+  id: number;
+  category: string;
+  name: string;
+  plate: string;
+  notes?: string;
+}
+
+export interface FleetWorker {
+  grade: number;
+  role: string;
+  count: number;
+  notes?: string;
+}
+
+export interface FleetCatalog {
+  vehicles: FleetVehicle[];
+  workers: FleetWorker[];
+}
+
+export interface MapMarker {
+  id: number;
+  name: string;
+  lat: number;
+  lon: number;
+  notes?: string;
+}
+
+export interface LocationPayload {
+  lat: number;
+  lon: number;
+}
+
+export type DecisionKind = 'system' | 'weather' | 'redirect' | 'maintenance';
+
+export interface DecisionRule {
+  id: string;
+  trigger: string;
+  kind: DecisionKind;
+  message_template: string;
+  enabled: boolean;
+}
+
+export interface EndRainResponse {
+  status: string;
+  site_id?: number;
+  site_name?: string;
+  message: string;
+  post_rain_tasks: MaintenanceTask[];
 }
 
 export interface DecisionEntry {
+  id?: number;
   at: string;
-  kind: 'system' | 'weather' | 'redirect' | 'maintenance';
+  kind: DecisionKind;
   message: string;
+  rule_id?: string;
+  trigger?: string;
   site_id?: number;
   truck_id?: number;
   task_id?: number;
